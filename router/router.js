@@ -29,16 +29,13 @@ router.post('/login', async (req, res) => {
         try {
                 const adminUser = await AdminModel.findOne({ username })
                 if (!adminUser) return res.status(400).json({ message: "invalid username" })
-                if (adminUser.password === password) {
-                        const token = jwt.sign({ id: adminUser._id }, jwt_secret_code, { expiresIn: '1hr' })
-                        res.status(200).json({ message: "user is logged", tokenmessage: token })
-                } else {
-                        res.status(400).json({ message: "incorrect information" })
-                }
+                const isMatched = bycript.compare(password, adminUser.password)
+                if (!isMatched) return res.status(400).json({ message: "incorrect password" })
+                const token = jwt.sign({ id: adminUser._id }, jwt_secret_code, { expiresIn: '1hr' })
+                res.status(200).json({ message: "user is logged", tokenmessage: token })
         } catch (err) {
                 res.status(400).json({ message: "the login post error found" + err })
         }
-
 })
 
 const middelwarestycoo = [authMiddleware, fileuploads.single("photo")]
@@ -77,7 +74,7 @@ router.get("/users/:id", authMiddleware, async (req, res) => {
         }
 })
 
-router.put("/users/:id",authMiddleware, async (req, res) => {
+router.put("/users/:id", authMiddleware, async (req, res) => {
         try {
                 const id = req.params.id
                 const newuserData = await UserModel.findByIdAndUpdate(id, { $set: req.body }, { new: true })
@@ -87,4 +84,18 @@ router.put("/users/:id",authMiddleware, async (req, res) => {
                 res.status(400).json({ message: "error is " + error })
         }
 })
+
+
+
+router.delete("/users/:id", authMiddleware, async (req, res) => {
+        try {
+                const id = req.params.id
+                const userData = await UserModel.findByIdAndDelete(id)
+                if (!userData) return res.status(400).json({ message: "user data not found" })
+                res.status(200).json(userData)
+        } catch (error) {
+                res.status(400).json({ message: "error is " + error })
+        }
+})
+
 module.exports = router
