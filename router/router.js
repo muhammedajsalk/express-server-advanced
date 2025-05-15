@@ -52,8 +52,20 @@ router.post('/users',middelwarestycoo, async (req, res) => {
                 const save=await newuser.save()
                 res.status(200).json({message:"new user added succefully",newuser:save})
         } catch (error) {
-              res.json({message:"error is "+error})
+              res.status(400).json({message:"error is "+error})
         }
+})
+
+router.get("/users",authMiddleware,async (req,res)=>{
+   const datas=await UserModel.find()
+   res.status(200).json(datas)
+})
+
+router.get("/users/:id",authMiddleware,async (req,res)=>{
+   const id=req.params.id
+   const userData= await UserModel.findOne({_id:id})
+   if(userData==null) return res.status(400).json({message:"invalid url"})
+   res.status(200).json(userData)
 })
 
 module.exports = router
